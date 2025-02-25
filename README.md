@@ -1,10 +1,10 @@
-Step 1 Install Mysql Python connector
+**Step 1 Install Mysql Python connector**
 pip install mysql-connector-python
 
-Step 2 :
+**Step 2 :**
 Import the database into your local machine
 
-Step 3:
+**Step 3:**
 Run the program
 
 
