@@ -1,0 +1,2 @@
+source F:\database/database.sql
+replace the location with your own file location 
