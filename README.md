@@ -90,11 +90,11 @@ All screens are built as hand-tuned Tkinter `Canvas` layouts (originally exporte
 
 ```
 EMPLOYEE/
-├── Final.py               # Main application (entry point)
-├── requirements.txt        # Python dependencies
-├── query.txt                # Note on importing the SQL dump
+├── main.py                # Main application (entry point)
+├── requirements.txt       # Python dependencies
+├── query.txt              # Note on importing the SQL dump
 ├── database/
-│   └── database.sql        # Schema + seed data for the `emp` database
+│   └── database.sql       # Schema + seed data for the `emp` database
 └── assets/
     ├── a.png, b.png, c.png  # Logo / icon assets
     ├── frame0/              # Welcome page images & button
@@ -148,7 +148,7 @@ This creates a single `employees` table and populates it with 20 sample records.
 
 ## Configuration
 
-The app connects to MySQL using `mysql.connector` in `Final.py`, reading credentials from environment variables (with fallback defaults for local development):
+The app connects to MySQL using `mysql.connector` in `main.py`, reading credentials from environment variables (with fallback defaults for local development):
 
 | Variable      | Default     | Description            |
 |---------------|-------------|-------------------------|
@@ -176,7 +176,7 @@ $env:DB_NAME="emp"
 ## Running the Application
 
 ```bash
-python Final.py
+python main.py
 ```
 
 The window opens maximized on the Welcome screen. Click **Continue** to reach the Login screen.
@@ -188,7 +188,7 @@ The window opens maximized on the Welcome screen. Click **Continue** to reach th
 | Admin | `admin`  | `admin123` |
 | HR    | `hr`     | `hr123`    |
 
-> ⚠️ **Security note:** these credentials are hardcoded directly in `Final.py` for demonstration purposes — there is no password hashing or external user store. Change or remove them before using this project with real employee data, and consider externalizing credentials and adding proper authentication for anything beyond local/demo use.
+> ⚠️ **Security note:** these credentials are hardcoded directly in `main.py` for demonstration purposes — there is no password hashing or external user store. Change or remove them before using this project with real employee data, and consider externalizing credentials and adding proper authentication for anything beyond local/demo use.
 
 ## Role-Based Access
 
