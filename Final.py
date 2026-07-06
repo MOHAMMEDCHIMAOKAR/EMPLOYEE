@@ -4,30 +4,19 @@ from tkinter import Canvas, PhotoImage, ttk, messagebox, Button
 import mysql.connector 
 import os
 from PIL import Image, ImageTk  # Add PIL for better image handling
-import webbrowser  # Add this at the top with other imports
 
 
 # Function to create database connection
 def create_connection():
     try:
-        # First try environment variables
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="root",
-            database="emp"
+        return mysql.connector.connect(
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", "Root"),
+            database=os.getenv("DB_NAME", "emp")
         )
-        # Test the connection
-        conn.ping(reconnect=True, attempts=3, delay=5)
-        return conn
     except mysql.connector.Error as e:
-        # More specific error handling
-        if e.errno == mysql.connector.errorcode.ER_ACCESS_DENIED_ERROR:
-            messagebox.showerror("Database Error", "Invalid username or password")
-        elif e.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
-            messagebox.showerror("Database Error", "Database 'emp' does not exist")
-        else:
-            messagebox.showerror("Database Error", f"Error connecting to database: {e}")
+        messagebox.showerror("Database Error", f"Failed to connect to the database: {e}")
         return None
 
 
@@ -89,15 +78,14 @@ class WelcomePage:
         self.screen_height = self.root.winfo_screenheight()
         
         # Configure window for full screen
-        self.root.title("Employee Management System - Welcome")
-        self.root.iconphoto(False, tk.PhotoImage(file="c.png"))
+        self.root.title("Employee Monitoring System - Welcome")
+        self.output_path = Path(__file__).resolve().parent
+        self.assets_path = self.output_path / "assets" / "frame0"
+        self.icon_path = self.output_path / "assets" / "c.png"
+        self.root.iconphoto(False, tk.PhotoImage(file=str(self.icon_path)))
         self.root.geometry(f"{self.screen_width}x{self.screen_height}")
         self.root.configure(bg="#C4D9FF")
         self.root.state('zoomed')  # For Windows, maximizes the window
-        
-        # Setup paths
-        self.output_path = Path(__file__).parent
-        self.assets_path = self.output_path / Path(r"D:\CODE\assets\frame0")
 
         # Create canvas to fill screen
         self.canvas = tk.Canvas(
@@ -239,14 +227,13 @@ class LoginPage:
         
         # Configure window for full screen
         self.root.title("Employee Management System - Login")
-        self.root.iconphoto(False, tk.PhotoImage(file="c.png"))
+        self.output_path = Path(__file__).resolve().parent
+        self.assets_path = self.output_path / "assets" / "frame1"
+        self.icon_path = self.output_path / "assets" / "c.png"
+        self.root.iconphoto(False, tk.PhotoImage(file=str(self.icon_path)))
         self.root.geometry(f"{self.screen_width}x{self.screen_height}")
         self.root.configure(bg="#FFFFFF")
         self.root.state('zoomed')  # For Windows, maximizes the window
-        
-        # Setup paths
-        self.output_path = Path(__file__).parent
-        self.assets_path = self.output_path / Path(r"D:\CODE\assets\frame1")
 
         # Create canvas to fill screen
         self.canvas = tk.Canvas(
@@ -367,7 +354,7 @@ class LoginPage:
             if hasattr(self, 'using_pil') and self.using_pil:
                 # Scale logo image
                 logo_img = Image.open(self.relative_to_assets("image_2.png"))
-                logo_width = int(self.screen_width * 0.3)
+                logo_width = int(self.screen_width * 0.2)  # Reduced width to 20% of screen width
                 logo_height = int(logo_width * (logo_img.height / logo_img.width))
                 logo_resized = logo_img.resize((logo_width, logo_height), Image.LANCZOS)
                 self.image_image_2 = ImageTk.PhotoImage(logo_resized)
@@ -613,7 +600,9 @@ class EmployeeManagementApp:
         
         # Configure window to use full screen
         self.root.title("Employee Management System")
-        self.root.iconphoto(False, tk.PhotoImage(file="c.png"))
+        self.output_path = Path(__file__).resolve().parent
+        self.icon_path = self.output_path / "assets" / "c.png"
+        self.root.iconphoto(False, tk.PhotoImage(file=str(self.icon_path)))
         self.root.geometry(f"{self.screen_width}x{self.screen_height}")
         self.root.configure(bg="#FFFFFF")
         self.root.state('zoomed')  # For Windows, maximizes the window
@@ -628,8 +617,9 @@ class EmployeeManagementApp:
         self.db = DatabaseOperations(self.cursor, self.con)
 
         # Setup paths
-        self.output_path = Path(__file__).parent
-        self.assets_path = self.output_path / Path(r"D:\CODE\assets\frame3")
+        self.output_path = Path(__file__).resolve().parent
+        self.assets_path = self.output_path / "assets" / "frame3"
+        self.icon_path = self.output_path / "assets" / "c.png"
 
         # Create canvas that fills the screen
         self.canvas = Canvas(
@@ -843,7 +833,7 @@ class EmployeeManagementApp:
         self.tree = ttk.Treeview(
             self.root,
             style="Custom.Treeview",
-            columns=("emp_id", "name", "post", "salary", "email"),
+            columns=("emp_id", "name", "post", "salary"),
             show="headings",
             height=15
         )
@@ -852,8 +842,7 @@ class EmployeeManagementApp:
             "emp_id": "ID",
             "name": "Name",
             "post": "Post",
-            "salary": "Salary",
-            "email": "Email"
+            "salary": "Salary"
         }
         
         # Set column widths proportionally
@@ -869,41 +858,6 @@ class EmployeeManagementApp:
             width=tree_width,
             height=tree_height
         )
-        
-        # Add binding for clicking on email addresses
-        self.tree.bind('<ButtonRelease-1>', self.on_tree_click)
-
-    def on_tree_click(self, event):
-        """Handle clicks on the treeview, especially for email addresses"""
-        # Get the row and column that was clicked
-        region = self.tree.identify_region(event.x, event.y)
-        if region != "cell":  # Only process if a cell was clicked
-            return
-            
-        # Get column ID and item (row) ID
-        column_id = self.tree.identify_column(event.x)
-        item_id = self.tree.identify_row(event.y)
-        
-        # Convert column ID (like #5) to column index (0-based)
-        column_index = int(column_id[1:]) - 1
-        
-        # Check if the email column (index 4) was clicked
-        if column_index == 4 and item_id:
-            # Get values of the clicked row
-            values = self.tree.item(item_id, 'values')
-            if values and len(values) > 4:
-                email = values[4]
-                if email and '@' in email:  # Simple validation to check if it looks like an email
-                    # Open default mail client with the email address
-                    self.send_email(email)
-    
-    def send_email(self, email):
-        """Open the default email client with the recipient address"""
-        try:
-            # Create a mailto URL and open it with the default browser/email client
-            webbrowser.open(f'mailto:{email}')
-        except Exception as e:
-            messagebox.showerror("Email Error", f"Could not open email client: {e}")
 
     def display_employees(self):
         for item in self.tree.get_children():
@@ -918,44 +872,38 @@ class EmployeeManagementApp:
     def show_add_employee_frame(self):
         add_window = tk.Toplevel(self.root)
         add_window.title("Add Employee")
-        add_window.geometry("400x350")  # Increased height for email field
+        add_window.geometry("400x300")
 
         frame = ttk.Frame(add_window, padding=20)
         frame.pack(fill=tk.BOTH, expand=True)
 
         # Add employee form fields
-        ttk.Label(frame, text="Name:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(frame, text="Name:").grid(row=0, column=0, padx=5, pady=5)
         name_entry = ttk.Entry(frame)
-        name_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        name_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        ttk.Label(frame, text="Post:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(frame, text="Post:").grid(row=1, column=0, padx=5, pady=5)
         post_entry = ttk.Entry(frame)
-        post_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
+        post_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        ttk.Label(frame, text="Salary:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(frame, text="Salary:").grid(row=2, column=0, padx=5, pady=5)
         salary_entry = ttk.Entry(frame)
-        salary_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
-
-        # Added email field
-        ttk.Label(frame, text="Email:").grid(row=3, column=0, padx=5, pady=5, sticky="w")
-        email_entry = ttk.Entry(frame, width=30)
-        email_entry.grid(row=3, column=1, padx=5, pady=5, sticky="ew")
+        salary_entry.grid(row=2, column=1, padx=5, pady=5)
 
         def save_employee():
             name = name_entry.get().strip()
             post = post_entry.get().strip()
             salary = salary_entry.get().strip()
-            email = email_entry.get().strip()  # Get email value
 
-            if not all([name, post, salary]):  # Email can be optional
-                messagebox.showwarning("Input Error", "Name, Post and Salary fields are required")
+            if not all([name, post, salary]):
+                messagebox.showwarning("Input Error", "All fields are required")
                 return
 
             try:
                 salary = float(salary)
                 self.db.execute_query(
-                    "INSERT INTO employees (name, post, salary, email) VALUES (%s, %s, %s, %s)",
-                    (name, post, salary, email)
+                    "INSERT INTO employees (name, post, salary) VALUES (%s, %s, %s)",
+                    (name, post, salary)
                 )
                 messagebox.showinfo("Success", "Employee added successfully")
                 self.display_employees()
@@ -964,7 +912,7 @@ class EmployeeManagementApp:
                 messagebox.showerror("Input Error", "Salary must be a number")
 
         ttk.Button(frame, text="Save", command=save_employee).grid(
-            row=4, column=0, columnspan=2, pady=10)  # Updated row position
+            row=3, column=0, columnspan=2, pady=10)
 
     def remove_employee(self):
         selected = self.tree.selection()
@@ -988,30 +936,24 @@ class EmployeeManagementApp:
         emp_id = self.tree.item(selected[0])['values'][0]
         promote_window = tk.Toplevel(self.root)
         promote_window.title("Promote Employee")
-        promote_window.geometry("400x250")  # Increased height for email field
+        promote_window.geometry("400x200")
 
         frame = ttk.Frame(promote_window, padding=20)
         frame.pack(fill=tk.BOTH, expand=True)
 
-        ttk.Label(frame, text="New Post:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(frame, text="New Post:").grid(row=0, column=0, padx=5, pady=5)
         post_entry = ttk.Entry(frame)
-        post_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
+        post_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        ttk.Label(frame, text="New Salary:").grid(row=1, column=0, padx=5, pady=5, sticky="w")
+        ttk.Label(frame, text="New Salary:").grid(row=1, column=0, padx=5, pady=5)
         salary_entry = ttk.Entry(frame)
-        salary_entry.grid(row=1, column=1, padx=5, pady=5, sticky="ew")
-        
-        # Added email update field
-        ttk.Label(frame, text="New Email:").grid(row=2, column=0, padx=5, pady=5, sticky="w")
-        email_entry = ttk.Entry(frame)
-        email_entry.grid(row=2, column=1, padx=5, pady=5, sticky="ew")
+        salary_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        def save_promotion():
+        def save_promotion():  # Removed self parameter
             new_post = post_entry.get().strip()
             new_salary = salary_entry.get().strip()
-            new_email = email_entry.get().strip()  # Get new email
 
-            if not new_post and not new_salary and not new_email:
+            if not new_post and not new_salary:
                 messagebox.showwarning("Input Error", "At least one field is required")
                 return
 
@@ -1033,11 +975,6 @@ class EmployeeManagementApp:
                     except ValueError:
                         messagebox.showerror("Input Error", "Salary must be a number")
                         return
-                
-                # Add email update if provided
-                if new_email:
-                    updates.append("email = %s")
-                    params.append(new_email)
 
                 # Add WHERE clause and emp_id
                 query += ", ".join(updates) + " WHERE emp_id = %s"
@@ -1045,7 +982,7 @@ class EmployeeManagementApp:
 
                 # Execute update
                 self.db.execute_query(query, params)
-                messagebox.showinfo("Success", "Employee updated successfully")
+                messagebox.showinfo("Success", "Employee promoted successfully")
                 self.display_employees()
                 promote_window.destroy()
 
@@ -1053,7 +990,7 @@ class EmployeeManagementApp:
                 messagebox.showerror("Error", f"Failed to update employee: {e}")
 
         ttk.Button(frame, text="Save", command=save_promotion).grid(
-            row=3, column=0, columnspan=2, pady=10)  # Updated row position
+            row=2, column=0, columnspan=2, pady=10)
 
     def show_search_employee_frame(self):
         search_window = tk.Toplevel(self.root)
@@ -1156,8 +1093,7 @@ class EmployeeManagementApp:
             ("Employee ID", "emp_id"),
             ("Name", "name"),
             ("Post", "post"),
-            ("Salary", "salary"),
-            ("Email", "email")  # Added email as a sortable field
+            ("Salary", "salary")
         ]
         sort_combo = ttk.Combobox(frame, textvariable=sort_var,
                                  values=[field[0] for field in sort_fields],
