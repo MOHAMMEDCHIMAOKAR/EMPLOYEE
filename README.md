@@ -143,8 +143,7 @@ pip install -r requirements.txt
    SOURCE /full/path/to/EMPLOYEE/database/database.sql;
    ```
 
-   > `query.txt` in the repo shows the original author's Windows-specific `SOURCE` path — replace it with the actual path on your machine, or just use the `mysql ... < database.sql` command above, which works cross-platform.
-
+  
 This creates a single `employees` table and populates it with 20 sample records.
 
 ## Configuration
